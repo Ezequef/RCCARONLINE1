@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>RC Car Online</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RC CAR ONLINE</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,193 +13,275 @@
     body {
       margin: 0;
       padding: 0;
-      background: #000;
+      background: black;
       overflow: hidden;
       font-family: "Segoe UI", Arial, sans-serif;
       height: 100vh;
       width: 100vw;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
-    .container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #000;
+    button, .control-btn, .control-top, h1 {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
-    iframe {
+    .camera {
       position: absolute;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      border: none;
-      object-fit: fill; /* estica o vídeo totalmente */
-      background: #000;
+      object-fit: fill;
       z-index: 1;
     }
 
     h1 {
       position: absolute;
-      top: 10px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
       color: #00eaff;
-      font-size: 22px;
-      text-shadow: 0 0 8px #00eaff;
-      font-weight: 600;
+      font-size: 30px;
+      font-weight: 700;
+      text-shadow: 0 0 12px #00eaff;
+      letter-spacing: 2px;
       z-index: 5;
     }
 
-    /* Indicador Wi-Fi */
-    .wifi-status {
+    .top-right {
       position: absolute;
-      top: 12px;
-      right: 70px;
-      width: 22px;
-      height: 22px;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 5;
+    }
+
+    .wifi-status {
+      width: 25px;
+      height: 25px;
       border-radius: 50%;
       background: red;
-      box-shadow: 0 0 6px red;
+      box-shadow: 0 0 8px red;
       transition: 0.3s;
-      z-index: 5;
-    }
-    .wifi-status.ok {
-      background: #00ff55;
-      box-shadow: 0 0 10px #00ff55;
     }
 
-    /* Botão de tela cheia */
-    .fullscreen-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
+    .wifi-status.ok {
+      background: #00ff55;
+      box-shadow: 0 0 14px #00ff55;
+    }
+
+    .control-top {
       display: flex;
       flex-direction: column;
       align-items: center;
-      cursor: pointer;
-      z-index: 5;
       color: #00eaff;
-      font-size: 14px;
       text-shadow: 0 0 6px #00eaff;
+      cursor: pointer;
+      font-size: 14px;
       transition: 0.2s;
       user-select: none;
     }
 
-    .fullscreen-btn:hover {
+    .control-top:hover {
       transform: scale(1.1);
     }
 
     .fullscreen-icon {
-      font-size: 26px;
+      font-size: 32px;
       line-height: 1;
     }
 
-    /* Controles */
-    .controles {
+    .control-btn {
       position: absolute;
-      bottom: 9%;
-      width: 100%;
-      display: grid;
-      grid-template-areas:
-        ". frente ."
-        "esquerda parar direita"
-        ". tras .";
-      gap: 14px;
-      justify-content: center;
-      align-items: center;
-      z-index: 4;
-    }
-
-    button {
-      background: rgba(0, 50, 80, 0.7);
-      color: #00faff;
-      border: none;
-      padding: 18px 25px;
-      font-size: 22px;
-      border-radius: 14px;
+      z-index: 5;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 3px solid rgba(0, 234, 255, 0.8);
+      background: rgba(0, 20, 40, 0.6);
+      color: #00eaff;
+      font-size: 42px;
       cursor: pointer;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 15px rgba(0, 234, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: 0.2s;
-      touch-action: manipulation;
+      user-select: none;
+      touch-action: none;
     }
 
-    button:hover {
-      background: rgba(0, 100, 160, 0.8);
+    .control-btn svg {
+      width: 60%;
+      height: 60%;
+      fill: #00eaff;
+      filter: drop-shadow(0 0 4px #00eaff);
+      pointer-events: none;
     }
 
-    .frente { grid-area: frente; }
-    .tras { grid-area: tras; }
-    .esquerda { grid-area: esquerda; }
-    .direita { grid-area: direita; }
-    .parar {
-      grid-area: parar;
-      background: rgba(255, 0, 70, 0.85);
-      color: #fff;
+    .control-btn:hover {
+      background: rgba(0, 80, 120, 0.8);
+      transform: scale(1.1);
     }
 
-    @media (orientation: portrait) {
-      .controles { bottom: 10%; }
-      button { font-size: 24px; padding: 20px 28px; }
+    .control-btn.editing {
+      box-shadow: 0 0 20px #00eaff;
+      border-color: #00eaff;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { box-shadow: 0 0 8px #00eaff; }
+      to { box-shadow: 0 0 20px #00eaff; }
+    }
+
+    @media (max-width: 768px) {
+      .control-btn {
+        width: 90px;
+        height: 90px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🚗 RC Car Online</h1>
+  <img class="camera" src="http://192.168.15.6:8080/video" alt="Câmera do carro">
+  <h1>RC CAR ONLINE</h1>
 
+  <div class="top-right">
     <div class="wifi-status" id="wifiStatus"></div>
-
-    <div class="fullscreen-btn" id="fullscreenBtn">
+    <div class="control-top" id="fullscreenBtn">
       <div class="fullscreen-icon" id="fullscreenIcon">🔳</div>
       <span id="fullscreenText">Tela Cheia</span>
     </div>
-
-    <iframe src="http://192.168.15.6:8080/video" allowfullscreen></iframe>
-
-    <div class="controles">
-      <button class="frente"
-        onmousedown="enviar('frente')" onmouseup="enviar('parar')"
-        ontouchstart="enviar('frente')" ontouchend="enviar('parar')">↑</button>
-
-      <button class="esquerda"
-        onmousedown="enviar('esquerda')" onmouseup="enviar('parar')"
-        ontouchstart="enviar('esquerda')" ontouchend="enviar('parar')">←</button>
-
-      <button class="parar" onclick="enviar('parar')">■</button>
-
-      <button class="direita"
-        onmousedown="enviar('direita')" onmouseup="enviar('parar')"
-        ontouchstart="enviar('direita')" ontouchend="enviar('parar')">→</button>
-
-      <button class="tras"
-        onmousedown="enviar('tras')" onmouseup="enviar('parar')"
-        ontouchstart="enviar('tras')" ontouchend="enviar('parar')">↓</button>
+    <div class="control-top" id="editLayoutBtn">
+      <div class="fullscreen-icon">🔧</div>
+      <span id="editLayoutText">Editar Layout</span>
     </div>
   </div>
 
+  <button class="control-btn" id="btnEsq" aria-label="Esquerda" title="Esquerda">
+    <svg viewBox="0 0 24 24"><path d="M15.5 3.87L13.73 2.1 4.83 11l8.9 8.9 1.77-1.77L8.37 11z"/></svg>
+  </button>
+
+  <button class="control-btn" id="btnDir" aria-label="Direita" title="Direita">
+    <svg viewBox="0 0 24 24"><path d="M8.5 20.13L10.27 21.9 19.17 13l-8.9-8.9-1.77 1.77L15.63 13z"/></svg>
+  </button>
+
+  <button class="control-btn" id="btnCima" aria-label="Frente" title="Frente">
+    <svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.59 5.58L20 12l-8-8-8 8z"/></svg>
+  </button>
+
+  <button class="control-btn" id="btnBaixo" aria-label="Trás" title="Trás">
+    <svg viewBox="0 0 24 24"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.59-5.58L4 12l8 8 8-8z"/></svg>
+  </button>
+
   <script>
-    const socket = new WebSocket(location.origin.replace(/^http/, 'ws'));
     const wifiStatus = document.getElementById('wifiStatus');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const fullscreenIcon = document.getElementById('fullscreenIcon');
     const fullscreenText = document.getElementById('fullscreenText');
+    const editLayoutBtn = document.getElementById('editLayoutBtn');
+    const editLayoutText = document.getElementById('editLayoutText');
+    let editMode = false;
 
-    // ====== STATUS WIFI ======
-    socket.addEventListener('open', () => {
-      wifiStatus.classList.add('ok');
+    fullscreenBtn.addEventListener('click', async () => {
+      const el = document.documentElement;
+      try {
+        if (!document.fullscreenElement) {
+          await el.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch (err) {
+        console.log("Fullscreen error:", err);
+      }
     });
 
-    socket.addEventListener('close', () => {
-      wifiStatus.classList.remove('ok');
+    document.addEventListener('fullscreenchange', () => {
+      const active = !!document.fullscreenElement;
+      fullscreenIcon.textContent = active ? '🔲' : '🔳';
+      fullscreenText.textContent = active ? 'Sair' : 'Tela Cheia';
     });
+
+    // ======== POSIÇÕES INICIAIS DOS BOTÕES =========
+    const buttons = {
+      btnEsq: { x: 100, y: window.innerHeight - 180, cmd: "esquerda" },
+      btnDir: { x: 250, y: window.innerHeight - 180, cmd: "direita" },
+      btnCima: { x: window.innerWidth - 180, y: window.innerHeight - 300, cmd: "frente" },
+      btnBaixo: { x: window.innerWidth - 180, y: window.innerHeight - 140, cmd: "tras" },
+    };
+
+    Object.keys(buttons).forEach(id => {
+      const btn = document.getElementById(id);
+      const saved = localStorage.getItem(id);
+      if (saved) {
+        const { x, y } = JSON.parse(saved);
+        btn.style.left = x + "px";
+        btn.style.top = y + "px";
+      } else {
+        btn.style.left = buttons[id].x + "px";
+        btn.style.top = buttons[id].y + "px";
+      }
+      btn.style.position = 'absolute';
+      makeDraggable(btn, id, buttons[id].cmd);
+    });
+
+    editLayoutBtn.addEventListener('click', () => {
+      editMode = !editMode;
+      editLayoutText.textContent = editMode ? "Finalizar Edição" : "Editar Layout";
+      document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.classList.toggle('editing', editMode);
+      });
+    });
+
+    // ======= MELHOR CONTROLE DE CLIQUE E TOQUE =======
+    function makeDraggable(el, id, comando) {
+      let offsetX = 0, offsetY = 0, dragging = false;
+
+      el.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        el.setPointerCapture(e.pointerId);
+        if (editMode) {
+          dragging = true;
+          offsetX = e.clientX - el.offsetLeft;
+          offsetY = e.clientY - el.offsetTop;
+        } else {
+          enviar(comando); // começa o movimento imediatamente
+        }
+      });
+
+      el.addEventListener("pointermove", e => {
+        if (editMode && dragging) {
+          el.style.left = (e.clientX - offsetX) + "px";
+          el.style.top = (e.clientY - offsetY) + "px";
+        }
+      });
+
+      el.addEventListener("pointerup", e => {
+        e.preventDefault();
+        el.releasePointerCapture(e.pointerId);
+        if (editMode && dragging) {
+          localStorage.setItem(id, JSON.stringify({ x: el.offsetLeft, y: el.offsetTop }));
+        } else {
+          enviar("parar"); // para imediatamente ao soltar
+        }
+        dragging = false;
+      });
+    }
+
+    // ======= WEBSOCKET =======
+    const socket = new WebSocket(location.origin.replace(/^http/, 'ws'));
+
+    socket.addEventListener('open', () => wifiStatus.classList.add('ok'));
+    socket.addEventListener('close', () => wifiStatus.classList.remove('ok'));
 
     function enviar(comando) {
       if (socket.readyState === WebSocket.OPEN) {
@@ -207,41 +289,8 @@
       }
     }
 
-    // ====== SIMULAÇÃO DE PING ======
-    setInterval(() => {
-      if (wifiStatus.classList.contains('ok')) {
-        const intensidade = Math.random() * 6 + 4;
-        wifiStatus.style.boxShadow = `0 0 ${intensidade}px #00ff55`;
-      }
-    }, 1000);
-
-    // ====== FULLSCREEN ======
-    fullscreenBtn.addEventListener('click', () => {
-      const doc = document.documentElement;
-      if (!document.fullscreenElement) {
-        if (doc.requestFullscreen) doc.requestFullscreen();
-        else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
-        else if (doc.msRequestFullscreen) doc.msRequestFullscreen();
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-        else if (document.msExitFullscreen) document.msExitFullscreen();
-      }
-    });
-
-    // Detecta mudança no modo tela cheia
-    document.addEventListener('fullscreenchange', () => {
-      if (document.fullscreenElement) {
-        fullscreenIcon.textContent = '🔲';
-        fullscreenText.textContent = 'Sair da Tela Cheia';
-      } else {
-        fullscreenIcon.textContent = '🔳';
-        fullscreenText.textContent = 'Tela Cheia';
-      }
-    });
-
-    // ====== TECLAS (WASD) ======
-    document.addEventListener('keydown', (e) => {
+    // ======= TECLADO =======
+    document.addEventListener('keydown', e => {
       const tecla = e.key.toLowerCase();
       if (['w','a','s','d'].includes(tecla)) {
         if (tecla === 'w') enviar('frente');
@@ -251,7 +300,7 @@
       }
     });
 
-    document.addEventListener('keyup', (e) => {
+    document.addEventListener('keyup', e => {
       const tecla = e.key.toLowerCase();
       if (['w','a','s','d'].includes(tecla)) enviar('parar');
     });
