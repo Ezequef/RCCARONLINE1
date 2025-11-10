@@ -1,32 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <title>Controle RC Car</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RC Car Online</title>
   <style>
-    body { font-family: Arial; text-align: center; background: #222; color: #0ff; }
-    button { width: 100px; height: 50px; margin: 10px; font-size: 18px; }
+    body {
+      background: #0b1221;
+      color: #00cfff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 { color: #00cfff; margin-bottom: 20px; }
+    .btns {
+      display: grid;
+      grid-template-areas:
+        ". frente ."
+        "esquerda parar direita"
+        ". tras .";
+      gap: 12px;
+    }
+    button {
+      background: #002b40;
+      color: #00faff;
+      border: none;
+      padding: 15px 25px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover { background: #005c80; }
+    .frente { grid-area: frente; }
+    .tras { grid-area: tras; }
+    .esquerda { grid-area: esquerda; }
+    .direita { grid-area: direita; }
+    .parar { grid-area: parar; background: #ff0044; color: white; }
   </style>
 </head>
 <body>
-  <h1>Controle do Carrinho</h1>
-  <div>
-    <button onclick="enviarComando('frente')">Frente</button>
-    <button onclick="enviarComando('tras')">Trás</button>
-    <button onclick="enviarComando('esquerda')">Esquerda</button>
-    <button onclick="enviarComando('direita')">Direita</button>
-    <button onclick="enviarComando('parar')">Parar</button>
+  <h1>🚗 Controle RC Online</h1>
+  <div class="btns">
+    <button class="frente" onclick="enviar('frente')">↑ Frente</button>
+    <button class="esquerda" onclick="enviar('esquerda')">← Esquerda</button>
+    <button class="parar" onclick="enviar('parar')">■ Parar</button>
+    <button class="direita" onclick="enviar('direita')">→ Direita</button>
+    <button class="tras" onclick="enviar('tras')">↓ Trás</button>
   </div>
 
   <script>
-    const socket = new WebSocket("wss://unproverbial-unhumourously-juniper.ngrok-free.dev");
+    const socket = new WebSocket(location.origin.replace(/^http/, 'ws'));
 
-    ws.onopen = () => console.log("Conectado ao servidor Render");
-    ws.onmessage = (msg) => console.log("Mensagem do servidor:", msg.data);
+    socket.addEventListener('open', () => {
+      console.log('✅ Conectado ao servidor!');
+    });
 
-    function enviarComando(cmd) {
-      ws.send(JSON.stringify({ type:'controle', comando: cmd }));
+    socket.addEventListener('close', () => {
+      console.log('⚠️ Conexão encerrada!');
+    });
+
+    function enviar(comando) {
+      socket.send(JSON.stringify({ type: 'controle', comando }));
+      console.log('📤 Enviado:', comando);
     }
   </script>
 </body>
 </html>
-
