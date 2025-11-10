@@ -6,51 +6,109 @@
   <title>RC Car Online</title>
   <style>
     body {
-      background: #0b1221;
-      color: #00cfff;
+      margin: 0;
+      background: #000;
+      overflow: hidden;
       font-family: Arial, sans-serif;
+    }
+
+    /* Container do vídeo e controles */
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      background: #000;
     }
-    h1 { color: #00cfff; margin-bottom: 20px; }
-    .btns {
+
+    /* Vídeo em tela cheia */
+    video, iframe, img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Área dos botões sobre o vídeo */
+    .controles {
+      position: absolute;
+      bottom: 10%;
+      width: 100%;
       display: grid;
       grid-template-areas:
         ". frente ."
         "esquerda parar direita"
         ". tras .";
-      gap: 12px;
+      gap: 14px;
+      justify-content: center;
+      align-items: center;
     }
+
     button {
-      background: #002b40;
+      background: rgba(0, 50, 80, 0.7);
       color: #00faff;
       border: none;
-      padding: 15px 25px;
-      font-size: 16px;
-      border-radius: 10px;
+      padding: 18px 25px;
+      font-size: 20px;
+      border-radius: 12px;
       cursor: pointer;
+      backdrop-filter: blur(6px);
       transition: 0.2s;
     }
-    button:hover { background: #005c80; }
+
+    button:hover {
+      background: rgba(0, 100, 160, 0.8);
+    }
+
     .frente { grid-area: frente; }
     .tras { grid-area: tras; }
     .esquerda { grid-area: esquerda; }
     .direita { grid-area: direita; }
-    .parar { grid-area: parar; background: #ff0044; color: white; }
+    .parar { 
+      grid-area: parar; 
+      background: rgba(255, 0, 70, 0.8);
+      color: white;
+    }
+
+    h1 {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #00eaff;
+      font-size: 22px;
+      text-shadow: 0 0 8px #00eaff;
+    }
   </style>
 </head>
 <body>
-  <h1>🚗 Controle RC Online</h1>
-  <div class="btns">
-    <button class="frente" onclick="enviar('frente')">↑ Frente</button>
-    <button class="esquerda" onclick="enviar('esquerda')">← Esquerda</button>
-    <button class="parar" onclick="enviar('parar')">■ Parar</button>
-    <button class="direita" onclick="enviar('direita')">→ Direita</button>
-    <button class="tras" onclick="enviar('tras')">↓ Trás</button>
+  <div class="container">
+    <h1>🚗 RC Car Online</h1>
+    
+    <!-- Exibição da câmera -->
+    <iframe src="http://192.168.15.6:8080/video" frameborder="0" allowfullscreen></iframe>
+    
+    <!-- Controles sobre o vídeo -->
+    <div class="controles">
+      <button class="frente" 
+        onmousedown="enviar('frente')" onmouseup="enviar('parar')" 
+        ontouchstart="enviar('frente')" ontouchend="enviar('parar')">↑</button>
+      
+      <button class="esquerda" 
+        onmousedown="enviar('esquerda')" onmouseup="enviar('parar')" 
+        ontouchstart="enviar('esquerda')" ontouchend="enviar('parar')">←</button>
+      
+      <button class="parar" onclick="enviar('parar')">■</button>
+      
+      <button class="direita" 
+        onmousedown="enviar('direita')" onmouseup="enviar('parar')" 
+        ontouchstart="enviar('direita')" ontouchend="enviar('parar')">→</button>
+      
+      <button class="tras" 
+        onmousedown="enviar('tras')" onmouseup="enviar('parar')" 
+        ontouchstart="enviar('tras')" ontouchend="enviar('parar')">↓</button>
+    </div>
   </div>
 
   <script>
@@ -68,6 +126,26 @@
       socket.send(JSON.stringify({ type: 'controle', comando }));
       console.log('📤 Enviado:', comando);
     }
+
+    // ====== Suporte a teclas (W, A, S, D) ======
+    document.addEventListener('keydown', (e) => {
+      const tecla = e.key.toLowerCase();
+      if (['w', 'a', 's', 'd'].includes(tecla)) {
+        let comando = '';
+        if (tecla === 'w') comando = 'frente';
+        if (tecla === 's') comando = 'tras';
+        if (tecla === 'a') comando = 'esquerda';
+        if (tecla === 'd') comando = 'direita';
+        enviar(comando);
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      const tecla = e.key.toLowerCase();
+      if (['w', 'a', 's', 'd'].includes(tecla)) {
+        enviar('parar');
+      }
+    });
   </script>
 </body>
 </html>
