@@ -1,50 +1,61 @@
-const express = require('express');
-const path = require('path');
-const WebSocket = require('ws');
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+import { WebSocketServer } from "ws";
+import http from "http";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Servir todos os arquivos da mesma pasta do server.js
+// Servir os arquivos do mesmo diretório
 app.use(express.static(__dirname));
 
-const server = app.listen(process.env.PORT || 3000, () => {
-  console.log('Servidor rodando...');
-});
+// Criar servidor HTTP (Render cuida do HTTPS automaticamente)
+const server = http.createServer(app);
 
-const wss = new WebSocket.Server({ server });
+// Criar servidor WebSocket atrelado ao HTTP
+const wss = new WebSocketServer({ server });
 
 let esp32Socket = null;
 
-wss.on('connection', (ws) => {
-  console.log('Novo cliente conectado');
+wss.on("connection", (ws) => {
+  console.log("🔌 Novo cliente conectado!");
 
-  ws.on('message', (msg) => {
+  ws.on("message", (msg) => {
     try {
       const data = JSON.parse(msg);
 
       // Identifica ESP32
-      if(data.type === 'esp32') {
+      if (data.type === "esp32") {
         esp32Socket = ws;
-        console.log('ESP32 conectada!');
+        console.log("✅ ESP32 conectada!");
       }
 
-      // Comando vindo do site
-      if(data.type === 'controle' && esp32Socket) {
+      // Controle vindo do site
+      if (data.type === "controle" && esp32Socket) {
         esp32Socket.send(JSON.stringify(data.comando));
-        console.log("Comando enviado para ESP32:", data.comando);
+        console.log("➡️ Comando enviado para ESP32:", data.comando);
       }
-    } catch(e) {
-      console.error('Erro:', e);
+    } catch (e) {
+      console.error("Erro ao processar mensagem:", e);
     }
   });
 
-  ws.on('close', () => {
-    console.log('Cliente desconectou');
-    if(ws === esp32Socket) esp32Socket = null;
+  ws.on("close", () => {
+    console.log("❌ Cliente desconectado.");
+    if (ws === esp32Socket) esp32Socket = null;
   });
 });
 
-// Serve o index.html quando acessar '/'
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+// Serve o index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// Render injeta automaticamente a PORT
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
