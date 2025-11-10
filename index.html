@@ -23,7 +23,6 @@
       align-items: center;
     }
 
-    /* Container geral */
     .container {
       position: relative;
       width: 100vw;
@@ -35,7 +34,6 @@
       background: #000;
     }
 
-    /* Câmera com efeito de "esticamento" */
     iframe {
       position: absolute;
       top: 0;
@@ -43,12 +41,11 @@
       width: 100vw;
       height: 100vh;
       border: none;
-      object-fit: fill; /* ESTICAR total, sem manter proporção */
+      object-fit: fill; /* estica o vídeo totalmente */
       background: #000;
       z-index: 1;
     }
 
-    /* Título */
     h1 {
       position: absolute;
       top: 10px;
@@ -61,11 +58,11 @@
       z-index: 5;
     }
 
-    /* Indicador de Wi-Fi */
+    /* Indicador Wi-Fi */
     .wifi-status {
       position: absolute;
       top: 12px;
-      right: 15px;
+      right: 70px;
       width: 22px;
       height: 22px;
       border-radius: 50%;
@@ -74,10 +71,35 @@
       transition: 0.3s;
       z-index: 5;
     }
-
     .wifi-status.ok {
       background: #00ff55;
       box-shadow: 0 0 10px #00ff55;
+    }
+
+    /* Botão de tela cheia */
+    .fullscreen-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      z-index: 5;
+      color: #00eaff;
+      font-size: 14px;
+      text-shadow: 0 0 6px #00eaff;
+      transition: 0.2s;
+      user-select: none;
+    }
+
+    .fullscreen-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .fullscreen-icon {
+      font-size: 26px;
+      line-height: 1;
     }
 
     /* Controles */
@@ -117,7 +139,7 @@
     .tras { grid-area: tras; }
     .esquerda { grid-area: esquerda; }
     .direita { grid-area: direita; }
-    .parar { 
+    .parar {
       grid-area: parar;
       background: rgba(255, 0, 70, 0.85);
       color: #fff;
@@ -133,13 +155,15 @@
   <div class="container">
     <h1>🚗 RC Car Online</h1>
 
-    <!-- Indicador Wi-Fi -->
     <div class="wifi-status" id="wifiStatus"></div>
 
-    <!-- Câmera (esticada) -->
+    <div class="fullscreen-btn" id="fullscreenBtn">
+      <div class="fullscreen-icon" id="fullscreenIcon">🔳</div>
+      <span id="fullscreenText">Tela Cheia</span>
+    </div>
+
     <iframe src="http://192.168.15.6:8080/video" allowfullscreen></iframe>
 
-    <!-- Controles -->
     <div class="controles">
       <button class="frente"
         onmousedown="enviar('frente')" onmouseup="enviar('parar')"
@@ -164,25 +188,26 @@
   <script>
     const socket = new WebSocket(location.origin.replace(/^http/, 'ws'));
     const wifiStatus = document.getElementById('wifiStatus');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const fullscreenIcon = document.getElementById('fullscreenIcon');
+    const fullscreenText = document.getElementById('fullscreenText');
 
+    // ====== STATUS WIFI ======
     socket.addEventListener('open', () => {
       wifiStatus.classList.add('ok');
-      console.log('✅ Conectado ao servidor!');
     });
 
     socket.addEventListener('close', () => {
       wifiStatus.classList.remove('ok');
-      console.log('⚠️ Conexão encerrada!');
     });
 
     function enviar(comando) {
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: 'controle', comando }));
-        console.log('📤 Enviado:', comando);
       }
     }
 
-    // Pseudo medição de latência (ping visual)
+    // ====== SIMULAÇÃO DE PING ======
     setInterval(() => {
       if (wifiStatus.classList.contains('ok')) {
         const intensidade = Math.random() * 6 + 4;
@@ -190,7 +215,32 @@
       }
     }, 1000);
 
-    // Controle por teclado
+    // ====== FULLSCREEN ======
+    fullscreenBtn.addEventListener('click', () => {
+      const doc = document.documentElement;
+      if (!document.fullscreenElement) {
+        if (doc.requestFullscreen) doc.requestFullscreen();
+        else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+        else if (doc.msRequestFullscreen) doc.msRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+      }
+    });
+
+    // Detecta mudança no modo tela cheia
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        fullscreenIcon.textContent = '🔲';
+        fullscreenText.textContent = 'Sair da Tela Cheia';
+      } else {
+        fullscreenIcon.textContent = '🔳';
+        fullscreenText.textContent = 'Tela Cheia';
+      }
+    });
+
+    // ====== TECLAS (WASD) ======
     document.addEventListener('keydown', (e) => {
       const tecla = e.key.toLowerCase();
       if (['w','a','s','d'].includes(tecla)) {
