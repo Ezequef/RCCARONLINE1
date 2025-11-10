@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>RC Car Online</title>
   <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
       margin: 0;
       padding: 0;
       background: #000;
       overflow: hidden;
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI", Arial, sans-serif;
       height: 100vh;
       width: 100vw;
       display: flex;
@@ -18,7 +23,7 @@
       align-items: center;
     }
 
-    /* Container principal */
+    /* Container geral */
     .container {
       position: relative;
       width: 100vw;
@@ -30,23 +35,55 @@
       background: #000;
     }
 
-    /* Exibição da câmera (sem corte, ajustando a tela inteira) */
-    iframe, video, img {
+    /* Câmera com efeito de "esticamento" */
+    iframe {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: contain; /* Mantém toda a imagem visível */
-      background: #000; /* Evita fundo branco nas bordas */
       border: none;
+      object-fit: fill; /* ESTICAR total, sem manter proporção */
+      background: #000;
+      z-index: 1;
     }
 
-    /* Controles centralizados na tela */
+    /* Título */
+    h1 {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #00eaff;
+      font-size: 22px;
+      text-shadow: 0 0 8px #00eaff;
+      font-weight: 600;
+      z-index: 5;
+    }
+
+    /* Indicador de Wi-Fi */
+    .wifi-status {
+      position: absolute;
+      top: 12px;
+      right: 15px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: red;
+      box-shadow: 0 0 6px red;
+      transition: 0.3s;
+      z-index: 5;
+    }
+
+    .wifi-status.ok {
+      background: #00ff55;
+      box-shadow: 0 0 10px #00ff55;
+    }
+
+    /* Controles */
     .controles {
       position: absolute;
-      bottom: 10%;
+      bottom: 9%;
       width: 100%;
       display: grid;
       grid-template-areas:
@@ -56,7 +93,7 @@
       gap: 14px;
       justify-content: center;
       align-items: center;
-      z-index: 10;
+      z-index: 4;
     }
 
     button {
@@ -69,6 +106,7 @@
       cursor: pointer;
       backdrop-filter: blur(6px);
       transition: 0.2s;
+      touch-action: manipulation;
     }
 
     button:hover {
@@ -79,49 +117,26 @@
     .tras { grid-area: tras; }
     .esquerda { grid-area: esquerda; }
     .direita { grid-area: direita; }
-    .parar {
+    .parar { 
       grid-area: parar;
-      background: rgba(255, 0, 70, 0.8);
-      color: white;
+      background: rgba(255, 0, 70, 0.85);
+      color: #fff;
     }
 
-    /* Título e status */
-    h1 {
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #00eaff;
-      font-size: 20px;
-      text-shadow: 0 0 8px #00eaff;
-      z-index: 20;
-    }
-
-    .wifi-status {
-      position: absolute;
-      top: 10px;
-      right: 12px;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: red;
-      box-shadow: 0 0 10px rgba(255,0,0,0.7);
-      transition: background 0.3s, box-shadow 0.3s;
-      z-index: 20;
-    }
-
-    .wifi-status.ok {
-      background: #00ff80;
-      box-shadow: 0 0 10px #00ff80;
+    @media (orientation: portrait) {
+      .controles { bottom: 10%; }
+      button { font-size: 24px; padding: 20px 28px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🚗 RC Car Online</h1>
+
+    <!-- Indicador Wi-Fi -->
     <div class="wifi-status" id="wifiStatus"></div>
 
-    <!-- Câmera -->
+    <!-- Câmera (esticada) -->
     <iframe src="http://192.168.15.6:8080/video" allowfullscreen></iframe>
 
     <!-- Controles -->
@@ -149,28 +164,29 @@
   <script>
     const socket = new WebSocket(location.origin.replace(/^http/, 'ws'));
     const wifiStatus = document.getElementById('wifiStatus');
-    let ultimoPing = 0;
 
     socket.addEventListener('open', () => {
-      console.log('✅ Conectado ao servidor!');
       wifiStatus.classList.add('ok');
+      console.log('✅ Conectado ao servidor!');
     });
 
     socket.addEventListener('close', () => {
-      console.log('⚠️ Conexão encerrada!');
       wifiStatus.classList.remove('ok');
+      console.log('⚠️ Conexão encerrada!');
     });
 
     function enviar(comando) {
-      socket.send(JSON.stringify({ type: 'controle', comando }));
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'controle', comando }));
+        console.log('📤 Enviado:', comando);
+      }
     }
 
-    // Simulação de PING Wi-Fi
+    // Pseudo medição de latência (ping visual)
     setInterval(() => {
-      if (socket.readyState === WebSocket.OPEN) {
-        const latencia = Math.floor(Math.random() * 100); // 0–100ms
-        ultimoPing = latencia;
-        wifiStatus.style.boxShadow = `0 0 ${10 + latencia / 10}px ${wifiStatus.classList.contains('ok') ? '#00ff80' : 'red'}`;
+      if (wifiStatus.classList.contains('ok')) {
+        const intensidade = Math.random() * 6 + 4;
+        wifiStatus.style.boxShadow = `0 0 ${intensidade}px #00ff55`;
       }
     }, 1000);
 
@@ -184,6 +200,7 @@
         if (tecla === 'd') enviar('direita');
       }
     });
+
     document.addEventListener('keyup', (e) => {
       const tecla = e.key.toLowerCase();
       if (['w','a','s','d'].includes(tecla)) enviar('parar');
