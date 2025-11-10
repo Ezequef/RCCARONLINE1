@@ -18,7 +18,7 @@
   </div>
 
   <script>
-    const ws = new WebSocket('wss://rccaronline.onrender.com/');
+    const socket = new WebSocket("wss://unproverbial-unhumourously-juniper.ngrok-free.dev");
 
     ws.onopen = () => console.log("Conectado ao servidor Render");
     ws.onmessage = (msg) => console.log("Mensagem do servidor:", msg.data);
@@ -29,3 +29,4 @@
   </script>
 </body>
 </html>
+
