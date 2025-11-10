@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Controle RC Car</title>
+  <style>
+    body { font-family: Arial; text-align: center; background: #222; color: #0ff; }
+    button { width: 100px; height: 50px; margin: 10px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>Controle do Carrinho</h1>
+  <div>
+    <button onclick="enviarComando('frente')">Frente</button>
+    <button onclick="enviarComando('tras')">Trás</button>
+    <button onclick="enviarComando('esquerda')">Esquerda</button>
+    <button onclick="enviarComando('direita')">Direita</button>
+    <button onclick="enviarComando('parar')">Parar</button>
+  </div>
+
+  <script>
+    const ws = new WebSocket('wss://rccaronline.onrender.com/');
+
+    ws.onopen = () => console.log("Conectado ao servidor Render");
+    ws.onmessage = (msg) => console.log("Mensagem do servidor:", msg.data);
+
+    function enviarComando(cmd) {
+      ws.send(JSON.stringify({ type:'controle', comando: cmd }));
+    }
+  </script>
+</body>
+</html>
