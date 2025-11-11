@@ -24,7 +24,7 @@ wss.on("connection", (ws) => {
     try {
       data = JSON.parse(msg);
     } catch (e) {
-      // Se for texto simples → enviar direto ao ESP32
+      // Se for texto puro → enviar direto ao ESP32
       if (esp32Socket) {
         esp32Socket.send(msg);
         console.log("➡️ (TXT) Comando enviado para ESP32:", msg);
@@ -32,19 +32,19 @@ wss.on("connection", (ws) => {
       return;
     }
 
-    // Se for ESP32 se identificando
+    // ESP32 identificando
     if (data.type === "esp32") {
       esp32Socket = ws;
       console.log("✅ ESP32 conectada!");
     }
 
-    // Se for comando de controle
+    // Controle → repassar comando
     if (data.type === "controle" && esp32Socket) {
       esp32Socket.send(data.comando);
       console.log("➡️ (JSON) Comando enviado para ESP32:", data.comando);
     }
 
-    // Se servidor receber ping → responde pong
+    // Ping → manter viva a conexão
     if (data.type === "ping" && ws.readyState === 1) {
       ws.send(JSON.stringify({ type: "pong" }));
     }
