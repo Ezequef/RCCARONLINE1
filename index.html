@@ -3,102 +3,77 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>RC Car — Mobile Joystick Control</title>
+<title>RC Car — Joystick</title>
 <style>
 html,body{height:100%;margin:0;background:#000;touch-action:none;user-select:none;font-family:system-ui,Arial}
 button{position:fixed;width:18vw;height:18vw;max-width:110px;max-height:110px;border-radius:50%;border:3px solid rgba(0,255,255,.6);background:rgba(0,40,60,.6);color:#0ff;font-size:4vw;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);box-shadow:0 0 12px rgba(0,255,255,.4);transition:.15s;touch-action:none}
 button:active{transform:scale(1.15);background:rgba(0,100,150,.7)}
-#up{bottom:32vh;right:8vw}
-#down{bottom:8vh;right:8vw}
-#left{bottom:20vh;left:8vw}
-#right{bottom:20vh;right:28vw}
+#up{bottom:32vh;right:8vw} #down{bottom:8vh;right:8vw}
+#left{bottom:20vh;left:8vw} #right{bottom:20vh;right:28vw}
 #status{position:fixed;top:10px;left:10px;display:flex;gap:8px;align-items:center;color:#0ff;font-size:13px}
 #dot{width:12px;height:12px;border-radius:50%;background:#ff0044;box-shadow:0 0 8px #ff0044}
 #moveBtn{position:fixed;top:10px;right:10px;width:40px;height:40px;background:rgba(0,255,255,.6);border-radius:50%;border:2px solid #0ff;color:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px;user-select:none;cursor:pointer;backdrop-filter:blur(6px);z-index:1000;}
 </style>
 </head>
 <body>
-<div id="status">
-    <div id="dot" title="WebSocket status"></div>
-    <div id="stext">WS: desconectado</div>
-</div>
+<div id="status"><div id="dot"></div><div id="stext">WS: desconectado</div></div>
 
 <button id="up">▲</button>
 <button id="down">▼</button>
 <button id="left">◄</button>
 <button id="right">►</button>
-<div id="moveBtn" title="Mover Joysticks">↕</div>
+<div id="moveBtn">↕</div>
 
 <script>
-const WS_URL=(function(){try{const q=new URLSearchParams(location.search);if(q.get('ws'))return q.get('ws')}catch(e){}return(location.protocol==='https:'?'wss://rccaronline.onrender.com':'ws://'+location.host)})();
-let s;
-let activeKeys={};
+const WS_URL = location.protocol==='https:'?'wss://rccaronline.onrender.com':'ws://'+location.host;
+let ws, activeKeys = {};
 
-function conn(){
-    s=new WebSocket(WS_URL);
-    s.onclose=()=>setTimeout(conn,1200);
-    s.onopen=()=>updateStatus(true);
-    s.onmessage=e=>{};
-    s.onerror=e=>updateStatus(false);
+function connect(){
+    ws = new WebSocket(WS_URL);
+    ws.onopen = ()=>updateStatus(true);
+    ws.onclose = ()=>setTimeout(connect,1200);
+    ws.onerror = ()=>updateStatus(false);
 }
 
 function updateStatus(ok){
-    const dot=document.getElementById('dot');
-    const stext=document.getElementById('stext');
-    if(ok){
-        dot.style.background='#00ff00';
-        dot.style.boxShadow='0 0 8px #00ff00';
-        stext.textContent='WS: conectado';
-    }else{
-        dot.style.background='#ff0044';
-        dot.style.boxShadow='0 0 8px #ff0044';
-        stext.textContent='WS: desconectado';
-    }
-}
-conn();
-
-function send(c){
-    if(!s||s.readyState!==1)return;
-    s.send(JSON.stringify({type:'controle',comando:c}));
+    const dot=document.getElementById('dot'), stext=document.getElementById('stext');
+    dot.style.background = ok ? '#0f0' : '#f04';
+    dot.style.boxShadow = ok ? '0 0 8px #0f0' : '0 0 8px #f04';
+    stext.textContent = ok ? 'WS: conectado' : 'WS: desconectado';
 }
 
-// Controle com parar automático restaurado
+connect();
+
+function sendCmd(c){ if(ws?.readyState===1) ws.send(JSON.stringify({type:'controle',comando:c})); }
+
 function updateKeys(){
-    if(activeKeys['w']) send('frente');
-    else if(activeKeys['s']) send('tras');
-    else if(activeKeys['a']) send('esquerda');
-    else if(activeKeys['d']) send('direita');
-    else send('parar');
+    if(activeKeys['w']) sendCmd('frente');
+    else if(activeKeys['s']) sendCmd('tras');
+    else if(activeKeys['a']) sendCmd('esquerda');
+    else if(activeKeys['d']) sendCmd('direita');
+    else sendCmd('parar');
 }
 
-function press(btn,key){
-    btn.addEventListener('pointerdown',e=>{e.preventDefault();activeKeys[key]=true;updateKeys()});
-    btn.addEventListener('pointerup',e=>{e.preventDefault();activeKeys[key]=false;updateKeys()});
+function bindBtn(btn,key){
+    btn.addEventListener('pointerdown',()=>{activeKeys[key]=true;updateKeys()});
+    btn.addEventListener('pointerup',()=>{activeKeys[key]=false;updateKeys()});
     btn.addEventListener('pointerleave',()=>{activeKeys[key]=false;updateKeys()});
 }
-press(document.getElementById('up'),'w');
-press(document.getElementById('down'),'s');
-press(document.getElementById('left'),'a');
-press(document.getElementById('right'),'d');
 
-onkeydown=e=>{let k=e.key.toLowerCase();if(['w','a','s','d'].includes(k)){activeKeys[k]=true;updateKeys()}};
-onkeyup=e=>{let k=e.key.toLowerCase();if(['w','a','s','d'].includes(k)){activeKeys[k]=false;updateKeys()}};
+bindBtn(document.getElementById('up'),'w');
+bindBtn(document.getElementById('down'),'s');
+bindBtn(document.getElementById('left'),'a');
+bindBtn(document.getElementById('right'),'d');
 
-// Botão para mover joystick na tela
+document.addEventListener('keydown',e=>{let k=e.key.toLowerCase();if(['w','a','s','d'].includes(k)){activeKeys[k]=true;updateKeys()}});
+document.addEventListener('keyup',e=>{let k=e.key.toLowerCase();if(['w','a','s','d'].includes(k)){activeKeys[k]=false;updateKeys()}});
+
+// Botão mover joystick
 const moveBtn=document.getElementById('moveBtn');
-let dragging=false,offsetX=0,offsetY=0;
-moveBtn.addEventListener('pointerdown',e=>{
-    dragging=true;
-    offsetX=e.clientX-moveBtn.offsetLeft;
-    offsetY=e.clientY-moveBtn.offsetTop;
-});
-document.addEventListener('pointermove',e=>{
-    if(dragging){
-        moveBtn.style.left=(e.clientX-offsetX)+'px';
-        moveBtn.style.top=(e.clientY-offsetY)+'px';
-    }
-});
-document.addEventListener('pointerup',()=>{dragging=false;});
+let drag=false, offsetX=0, offsetY=0;
+moveBtn.addEventListener('pointerdown',e=>{drag=true;offsetX=e.clientX-moveBtn.offsetLeft;offsetY=e.clientY-moveBtn.offsetTop});
+document.addEventListener('pointermove',e=>{if(drag){moveBtn.style.left=(e.clientX-offsetX)+'px'; moveBtn.style.top=(e.clientY-offsetY)+'px';}});
+document.addEventListener('pointerup',()=>{drag=false;});
 </script>
 </body>
 </html>
