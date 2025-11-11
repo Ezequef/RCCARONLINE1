@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import { fileURLToPath } from "url";
 import { WebSocketServer } from "ws";
 import http from "http";
 
@@ -8,6 +9,10 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 let esp32Socket = null;
+
+// --- Corrige __dirname para módulos ES ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Serve arquivos estáticos (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "public"))); // coloque index.html dentro da pasta 'public'
@@ -49,4 +54,6 @@ wss.on("connection", (ws) => {
 });
 
 // Inicia servidor
-server.listen(process.env.PORT || 10000);
+server.listen(process.env.PORT || 10000, () => {
+  console.log(`Servidor rodando na porta ${process.env.PORT || 10000}`);
+});
