@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { WebSocketServer } from "ws";
 import http from "http";
+import fs from "fs";
 
 const app = express();
 const server = http.createServer(app);
@@ -14,12 +15,18 @@ let esp32Socket = null;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve arquivos estáticos (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, "public"))); // coloque index.html dentro da pasta 'public'
+// --- Verifica se o index.html existe ---
+const indexPath = path.join(__dirname, "index.html");
+if (!fs.existsSync(indexPath)) {
+  console.error("❌ index.html não encontrado em:", indexPath);
+}
+
+// Serve arquivos estáticos da mesma pasta do server.js
+app.use(express.static(__dirname));
 
 // Rota raiz
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
+  res.sendFile(indexPath);
 });
 
 // WebSocket
@@ -54,6 +61,7 @@ wss.on("connection", (ws) => {
 });
 
 // Inicia servidor
-server.listen(process.env.PORT || 10000, () => {
-  console.log(`Servidor rodando na porta ${process.env.PORT || 10000}`);
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
