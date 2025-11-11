@@ -1,283 +1,104 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>RC CAR ONLINE</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: black;
-      overflow: hidden;
-      font-family: "Segoe UI", Arial, sans-serif;
-      height: 100vh;
-      width: 100vw;
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      -ms-user-select: none;
-    }
-
-    /* Bloquear toque longo (celular) */
-    body, button, .control-btn, .control-top, h1 {
-      -webkit-user-drag: none;
-      -webkit-touch-callout: none;
-      user-select: none;
-      -webkit-user-select: none;
-      -ms-user-select: none;
-    }
-
-    .camera {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: fill;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    h1 {
-      position: absolute;
-      top: 2vh;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #00eaff;
-      font-weight: 700;
-      text-shadow: 0 0 12px #00eaff;
-      letter-spacing: 2px;
-      z-index: 5;
-      font-size: clamp(18px, 4vw, 30px);
-    }
-
-    .top-right {
-      position: absolute;
-      top: 2vh;
-      right: 2vw;
-      display: flex;
-      align-items: center;
-      gap: 2vw;
-      z-index: 5;
-    }
-
-    .wifi-status {
-      width: clamp(15px, 3vw, 25px);
-      height: clamp(15px, 3vw, 25px);
-      border-radius: 50%;
-      background: red;
-      box-shadow: 0 0 8px red;
-      transition: 0.3s;
-    }
-
-    .wifi-status.ok {
-      background: #00ff55;
-      box-shadow: 0 0 14px #00ff55;
-    }
-
-    .control-top {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #00eaff;
-      text-shadow: 0 0 6px #00eaff;
-      cursor: pointer;
-      font-size: clamp(10px, 2vw, 14px);
-      transition: 0.2s;
-    }
-
-    .control-top:hover {
-      transform: scale(1.1);
-    }
-
-    .fullscreen-icon {
-      font-size: clamp(20px, 4vw, 32px);
-      line-height: 1;
-    }
-
-    .control-btn {
-      position: absolute;
-      z-index: 5;
-      border-radius: 50%;
-      border: 3px solid rgba(0, 234, 255, 0.8);
-      background: rgba(0, 20, 40, 0.6);
-      color: #00eaff;
-      cursor: pointer;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 15px rgba(0, 234, 255, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.2s;
-      user-select: none;
-      touch-action: none;
-      width: clamp(60px, 18vw, 110px);
-      height: clamp(60px, 18vw, 110px);
-    }
-
-    .control-btn svg {
-      width: 60%;
-      height: 60%;
-      fill: #00eaff;
-      filter: drop-shadow(0 0 4px #00eaff);
-      pointer-events: none;
-    }
-
-    .control-btn:hover {
-      background: rgba(0, 80, 120, 0.8);
-      transform: scale(1.1);
-    }
-
-    .control-btn.editing {
-      box-shadow: 0 0 20px #00eaff;
-      border-color: #00eaff;
-      animation: pulse 1s infinite alternate;
-    }
-
-    @keyframes pulse {
-      from { box-shadow: 0 0 8px #00eaff; }
-      to { box-shadow: 0 0 20px #00eaff; }
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>RC Car — Mobile Joystick Control</title>
+<style>
+html,body{height:100%;margin:0;background:#000;touch-action:none;user-select:none;font-family:system-ui,Arial}
+button{position:fixed;width:18vw;height:18vw;max-width:110px;max-height:110px;border-radius:50%;border:3px solid rgba(0,255,255,.6);background:rgba(0,40,60,.6);color:#0ff;font-size:4vw;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);box-shadow:0 0 12px rgba(0,255,255,.4);transition:.15s;touch-action:none}
+button:active{transform:scale(1.15);background:rgba(0,100,150,.7)}
+#up{bottom:32vh;right:8vw}
+#down{bottom:8vh;right:8vw}
+#left{bottom:20vh;left:8vw}
+#right{bottom:20vh;right:28vw}
+#status{position:fixed;top:10px;left:10px;display:flex;gap:8px;align-items:center;color:#0ff;font-size:13px}
+#dot{width:12px;height:12px;border-radius:50%;background:#ff0044;box-shadow:0 0 8px #ff0044}
+#moveBtn{position:fixed;top:10px;right:10px;width:40px;height:40px;background:rgba(0,255,255,.6);border-radius:50%;border:2px solid #0ff;color:#000;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px;user-select:none;cursor:pointer;backdrop-filter:blur(6px);z-index:1000;}
+</style>
 </head>
-<body oncontextmenu="return false">
-  <img class="camera" src="http://192.168.15.6:8080/video" alt="Câmera do carro">
-  <h1>RC CAR ONLINE</h1>
+<body>
+<div id="status">
+    <div id="dot" title="WebSocket status"></div>
+    <div id="stext">WS: desconectado</div>
+</div>
 
-  <div class="top-right">
-    <div class="wifi-status" id="wifiStatus"></div>
-    <div class="control-top" id="fullscreenBtn">
-      <div class="fullscreen-icon" id="fullscreenIcon">🔳</div>
-      <span id="fullscreenText">Tela Cheia</span>
-    </div>
-    <div class="control-top" id="editLayoutBtn">
-      <div class="fullscreen-icon">🔧</div>
-      <span id="editLayoutText">Editar</span>
-    </div>
-  </div>
+<button id="up">▲</button>
+<button id="down">▼</button>
+<button id="left">◄</button>
+<button id="right">►</button>
+<div id="moveBtn" title="Mover Joysticks">↕</div>
 
-  <button class="control-btn" id="btnEsq" aria-label="Esquerda">
-    <svg viewBox="0 0 24 24"><path d="M15.5 3.87L13.73 2.1 4.83 11l8.9 8.9 1.77-1.77L8.37 11z"/></svg>
-  </button>
+<script>
+const WS_URL=(function(){try{const q=new URLSearchParams(location.search);if(q.get('ws'))return q.get('ws')}catch(e){}return(location.protocol==='https:'?'wss://rccaronline.onrender.com':'ws://'+location.host)})();
+let s;
+let activeKeys={};
 
-  <button class="control-btn" id="btnDir" aria-label="Direita">
-    <svg viewBox="0 0 24 24"><path d="M8.5 20.13L10.27 21.9 19.17 13l-8.9-8.9-1.77 1.77L15.63 13z"/></svg>
-  </button>
+function conn(){
+    s=new WebSocket(WS_URL);
+    s.onclose=()=>setTimeout(conn,1200);
+    s.onopen=()=>updateStatus(true);
+    s.onmessage=e=>{};
+    s.onerror=e=>updateStatus(false);
+}
 
-  <button class="control-btn" id="btnCima" aria-label="Frente">
-    <svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.59 5.58L20 12l-8-8-8 8z"/></svg>
-  </button>
-
-  <button class="control-btn" id="btnBaixo" aria-label="Trás">
-    <svg viewBox="0 0 24 24"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.59-5.58L4 12l8 8 8-8z"/></svg>
-  </button>
-
-  <script>
-    const wifiStatus = document.getElementById('wifiStatus');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const fullscreenIcon = document.getElementById('fullscreenIcon');
-    const fullscreenText = document.getElementById('fullscreenText');
-    const editLayoutBtn = document.getElementById('editLayoutBtn');
-    const editLayoutText = document.getElementById('editLayoutText');
-    let editMode = false;
-
-    fullscreenBtn.addEventListener('click', async () => {
-      const el = document.documentElement;
-      try {
-        if (!document.fullscreenElement) await el.requestFullscreen();
-        else await document.exitFullscreen();
-      } catch (err) { console.log("Fullscreen error:", err); }
-    });
-
-    document.addEventListener('fullscreenchange', () => {
-      const active = !!document.fullscreenElement;
-      fullscreenIcon.textContent = active ? '🔲' : '🔳';
-      fullscreenText.textContent = active ? 'Sair' : 'Tela Cheia';
-    });
-
-    // ===== POSIÇÕES PADRÃO =====
-    const buttons = {
-      btnEsq: { x: 10, y: window.innerHeight - 150, cmd: "esquerda" },
-      btnDir: { x: 140, y: window.innerHeight - 150, cmd: "direita" },
-      btnCima: { x: window.innerWidth - 130, y: window.innerHeight - 250, cmd: "frente" },
-      btnBaixo: { x: window.innerWidth - 130, y: window.innerHeight - 110, cmd: "tras" },
-    };
-
-    Object.keys(buttons).forEach(id => {
-      const btn = document.getElementById(id);
-      const saved = localStorage.getItem(id);
-      const { x, y } = saved ? JSON.parse(saved) : buttons[id];
-      btn.style.left = `${x}px`;
-      btn.style.top = `${y}px`;
-      btn.style.position = 'absolute';
-      makeDraggable(btn, id, buttons[id].cmd);
-    });
-
-    editLayoutBtn.addEventListener('click', () => {
-      editMode = !editMode;
-      editLayoutText.textContent = editMode ? "Salvar" : "Editar";
-      document.querySelectorAll('.control-btn').forEach(btn => {
-        btn.classList.toggle('editing', editMode);
-      });
-    });
-
-    function makeDraggable(el, id, comando) {
-      let offsetX = 0, offsetY = 0, dragging = false;
-
-      el.addEventListener("pointerdown", e => {
-        e.preventDefault();
-        el.setPointerCapture(e.pointerId);
-        if (editMode) {
-          dragging = true;
-          offsetX = e.clientX - el.offsetLeft;
-          offsetY = e.clientY - el.offsetTop;
-        } else enviar(comando);
-      });
-
-      el.addEventListener("pointermove", e => {
-        if (editMode && dragging) {
-          el.style.left = (e.clientX - offsetX) + "px";
-          el.style.top = (e.clientY - offsetY) + "px";
-        }
-      });
-
-      el.addEventListener("pointerup", e => {
-        e.preventDefault();
-        el.releasePointerCapture(e.pointerId);
-        if (editMode && dragging)
-          localStorage.setItem(id, JSON.stringify({ x: el.offsetLeft, y: el.offsetTop }));
-        else enviar("parar");
-        dragging = false;
-      });
+function updateStatus(ok){
+    const dot=document.getElementById('dot');
+    const stext=document.getElementById('stext');
+    if(ok){
+        dot.style.background='#00ff00';
+        dot.style.boxShadow='0 0 8px #00ff00';
+        stext.textContent='WS: conectado';
+    }else{
+        dot.style.background='#ff0044';
+        dot.style.boxShadow='0 0 8px #ff0044';
+        stext.textContent='WS: desconectado';
     }
+}
+conn();
 
-    // ===== WEBSOCKET =====
-    const socket = new WebSocket(location.origin.replace(/^http/, 'ws'));
-    socket.addEventListener('open', () => wifiStatus.classList.add('ok'));
-    socket.addEventListener('close', () => wifiStatus.classList.remove('ok'));
+function send(c){
+    if(!s||s.readyState!==1)return;
+    s.send(JSON.stringify({type:'controle',comando:c}));
+}
 
-    function enviar(comando) {
-      if (socket.readyState === WebSocket.OPEN)
-        socket.send(JSON.stringify({ type: 'controle', comando }));
+// Controle com parar automático restaurado
+function updateKeys(){
+    if(activeKeys['w']) send('frente');
+    else if(activeKeys['s']) send('tras');
+    else if(activeKeys['a']) send('esquerda');
+    else if(activeKeys['d']) send('direita');
+    else send('parar');
+}
+
+function press(btn,key){
+    btn.addEventListener('pointerdown',e=>{e.preventDefault();activeKeys[key]=true;updateKeys()});
+    btn.addEventListener('pointerup',e=>{e.preventDefault();activeKeys[key]=false;updateKeys()});
+    btn.addEventListener('pointerleave',()=>{activeKeys[key]=false;updateKeys()});
+}
+press(document.getElementById('up'),'w');
+press(document.getElementById('down'),'s');
+press(document.getElementById('left'),'a');
+press(document.getElementById('right'),'d');
+
+onkeydown=e=>{let k=e.key.toLowerCase();if(['w','a','s','d'].includes(k)){activeKeys[k]=true;updateKeys()}};
+onkeyup=e=>{let k=e.key.toLowerCase();if(['w','a','s','d'].includes(k)){activeKeys[k]=false;updateKeys()}};
+
+// Botão para mover joystick na tela
+const moveBtn=document.getElementById('moveBtn');
+let dragging=false,offsetX=0,offsetY=0;
+moveBtn.addEventListener('pointerdown',e=>{
+    dragging=true;
+    offsetX=e.clientX-moveBtn.offsetLeft;
+    offsetY=e.clientY-moveBtn.offsetTop;
+});
+document.addEventListener('pointermove',e=>{
+    if(dragging){
+        moveBtn.style.left=(e.clientX-offsetX)+'px';
+        moveBtn.style.top=(e.clientY-offsetY)+'px';
     }
-
-    // ===== TECLADO =====
-    document.addEventListener('keydown', e => {
-      const t = e.key.toLowerCase();
-      if (['w','a','s','d'].includes(t))
-        enviar({ w: 'frente', s: 'tras', a: 'esquerda', d: 'direita' }[t]);
-    });
-
-    document.addEventListener('keyup', e => {
-      if (['w','a','s','d'].includes(e.key.toLowerCase())) enviar('parar');
-    });
-  </script>
+});
+document.addEventListener('pointerup',()=>{dragging=false;});
+</script>
 </body>
 </html>
