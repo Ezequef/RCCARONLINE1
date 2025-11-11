@@ -28,24 +28,51 @@ button:active{transform:scale(1.15);background:rgba(0,100,150,.7)}
 const WS_URL = location.protocol==='https:'?'wss://rccaronline.onrender.com':'ws://'+location.host;
 let ws, activeKeys = {};
 
+// Elementos
+const btnUp = document.getElementById('up');
+const btnDown = document.getElementById('down');
+const btnLeft = document.getElementById('left');
+const btnRight = document.getElementById('right');
+const statusDot = document.getElementById('dot');
+const statusText = document.getElementById('stext');
+
+// Conecta WebSocket
 function connect(){
     ws = new WebSocket(WS_URL);
     ws.onopen = ()=>updateStatus(true);
     ws.onclose = ()=>setTimeout(connect,1200);
     ws.onerror = ()=>updateStatus(false);
+
+    ws.onmessage = (evt)=>{
+        try{
+            const data = JSON.parse(evt.data);
+            if(data.type === 'estado'){
+                // Atualiza cores dos botões
+                btnUp.style.background = data.fwd ? 'rgba(0,255,0,0.7)' : 'rgba(0,40,60,0.6)';
+                btnDown.style.background = data.back ? 'rgba(0,255,0,0.7)' : 'rgba(0,40,60,0.6)';
+                btnLeft.style.background = data.left ? 'rgba(0,255,0,0.7)' : 'rgba(0,40,60,0.6)';
+                btnRight.style.background = data.right ? 'rgba(0,255,0,0.7)' : 'rgba(0,40,60,0.6)';
+            }
+        }catch(e){}
+    };
 }
 
+// Atualiza status WS
 function updateStatus(ok){
-    const dot=document.getElementById('dot'), stext=document.getElementById('stext');
-    dot.style.background = ok ? '#0f0' : '#f04';
-    dot.style.boxShadow = ok ? '0 0 8px #0f0' : '0 0 8px #f04';
-    stext.textContent = ok ? 'WS: conectado' : 'WS: desconectado';
+    statusDot.style.background = ok ? '#0f0' : '#f04';
+    statusDot.style.boxShadow = ok ? '0 0 8px #0f0' : '0 0 8px #f04';
+    statusText.textContent = ok ? 'WS: conectado' : 'WS: desconectado';
 }
 
 connect();
 
-function sendCmd(c){ if(ws?.readyState===1) ws.send(JSON.stringify({type:'controle',comando:c})); }
+// Envia comando para o servidor
+function sendCmd(c){
+    if(ws?.readyState===1)
+        ws.send(JSON.stringify({type:'controle',comando:c}));
+}
 
+// Atualiza teclas ativas
 function updateKeys(){
     if(activeKeys['w']) sendCmd('frente');
     else if(activeKeys['s']) sendCmd('tras');
@@ -54,19 +81,27 @@ function updateKeys(){
     else sendCmd('parar');
 }
 
+// Botões de toque
 function bindBtn(btn,key){
     btn.addEventListener('pointerdown',()=>{activeKeys[key]=true;updateKeys()});
     btn.addEventListener('pointerup',()=>{activeKeys[key]=false;updateKeys()});
     btn.addEventListener('pointerleave',()=>{activeKeys[key]=false;updateKeys()});
 }
 
-bindBtn(document.getElementById('up'),'w');
-bindBtn(document.getElementById('down'),'s');
-bindBtn(document.getElementById('left'),'a');
-bindBtn(document.getElementById('right'),'d');
+bindBtn(btnUp,'w');
+bindBtn(btnDown,'s');
+bindBtn(btnLeft,'a');
+bindBtn(btnRight,'d');
 
-document.addEventListener('keydown',e=>{let k=e.key.toLowerCase();if(['w','a','s','d'].includes(k)){activeKeys[k]=true;updateKeys()}});
-document.addEventListener('keyup',e=>{let k=e.key.toLowerCase();if(['w','a','s','d'].includes(k)){activeKeys[k]=false;updateKeys()}});
+// Teclado físico
+document.addEventListener('keydown',e=>{
+    let k=e.key.toLowerCase();
+    if(['w','a','s','d'].includes(k)){activeKeys[k]=true;updateKeys();}
+});
+document.addEventListener('keyup',e=>{
+    let k=e.key.toLowerCase();
+    if(['w','a','s','d'].includes(k)){activeKeys[k]=false;updateKeys();}
+});
 
 // Botão mover joystick
 const moveBtn=document.getElementById('moveBtn');
